@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Macro Stress Test Simulator | Regime & Alpha</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            950: '#070A12',
+                            900: '#0B0F19',
+                            850: '#111726',
+                            800: '#172036',
+                            700: '#1F2C4A'
+                        },
+                        gold: {
+                            400: '#FBBF24',
+                            500: '#F59E0B',
+                            600: '#D97706',
+                            glow: 'rgba(245, 158, 11, 0.15)'
+                        },
+                        cyan: {
+                            400: '#22D3EE',
+                            500: '#06B6D4',
+                            glow: 'rgba(6, 182, 212, 0.15)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        serif: ['Cinzel', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gold-border-glow {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.12), inset 0 0 15px rgba(245, 158, 11, 0.05);
+        }
+        .cyan-border-glow {
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.12), inset 0 0 15px rgba(6, 182, 212, 0.05);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070A12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1F2C4A;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #F59E0B;
+        }
+    </style>
+</head>
+<body class="bg-navy-950 text-slate-100 font-sans antialiased min-h-screen pb-12">
+
+    <!-- Top Navigation Header -->
+    <header class="border-b border-slate-800 bg-navy-900/90 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-gold-500 to-cyan-500 flex items-center justify-center font-bold text-navy-950 text-xl font-mono">
+                    R&α
+                </div>
+                <div>
+                    <h1 class="text-sm font-semibold tracking-wider text-slate-100 font-serif">REGIME & ALPHA</h1>
+                    <p class="text-[11px] text-slate-400 font-mono">Macro Allocation & Risk Engineering</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3 text-xs text-slate-400">
+                <span class="font-mono bg-navy-800 px-3 py-1.5 rounded-lg border border-slate-800 text-slate-200">
+                    Dr. Lora Xiaolin Qian, PhD, CFA
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-6">
+
+        <!-- Title Banner -->
+        <div class="bg-navy-900 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <div class="flex items-center gap-2 text-[11px] font-mono text-gold-400 uppercase tracking-widest mb-1">
+                    <span class="w-2 h-2 rounded-full bg-gold-400"></span>
+                    QUANTITATIVE SIMULATION ENGINE
+                </div>
+                <h2 class="text-2xl font-bold font-serif text-slate-100">
+                    Macro Stress Test & Allocation Engine
+                </h2>
+                <p class="text-xs text-slate-400 mt-1 font-mono">
+                    Simulate portfolio drawdown and return trajectories under policy interventions, rate shocks, and CapEx cycles.
+                </p>
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-mono text-slate-400 mr-1">Presets:</span>
+                <button onclick="applyPreset('balanced')" class="px-3 py-1.5 text-xs bg-navy-800 hover:bg-navy-700 text-gold-400 border border-gold-500/30 rounded-lg font-mono transition">
+                    Balanced Barbell (40/40/20)
+                </button>
+                <button onclick="applyPreset('defensive')" class="px-3 py-1.5 text-xs bg-navy-800 hover:bg-navy-700 text-slate-300 border border-slate-700 rounded-lg font-mono transition">
+                    Defensive (60/20/20)
+                </button>
+                <button onclick="applyPreset('growth')" class="px-3 py-1.5 text-xs bg-navy-800 hover:bg-navy-700 text-cyan-400 border border-cyan-500/30 rounded-lg font-mono transition">
+                    High Growth (25/60/15)
+                </button>
+                <button onclick="applyPreset('6040')" class="px-3 py-1.5 text-xs bg-navy-800 hover:bg-navy-700 text-red-400 border border-red-500/30 rounded-lg font-mono transition">
+                    Trad 60/40
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Simulator Panel (3 Columns Layout) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Controls Sidebar (4 Columns) -->
+            <div class="lg:col-span-4 bg-navy-900 p-5 rounded-2xl border border-slate-800 space-y-6">
+                
+                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                    <h3 class="text-sm font-bold font-mono text-gold-400 uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-4 h-4"></i> Portfolio Weight Sizing
+                    </h3>
+                    <span id="total-weight-badge" class="text-[10px] font-mono px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded">
+                        100% Allocated
+                    </span>
+                </div>
+
+                <!-- Slider: Gold Weight -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-mono">
+                        <span class="text-slate-200 flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-gold-400"></span> Gold / Real Assets ($XAU)
+                        </span>
+                        <span id="weight-gold-val" class="text-gold-400 font-bold">40%</span>
+                    </div>
+                    <input type="range" id="weight-gold" min="0" max="80" value="40" oninput="updateWeights()" class="w-full accent-gold-500 bg-navy-950 rounded-lg h-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 font-mono">Sovereign balance sheet & real rate hedge</p>
+                </div>
+
+                <!-- Slider: AI Weight -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-mono">
+                        <span class="text-slate-200 flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span> AI Infrastructure / Tech
+                        </span>
+                        <span id="weight-ai-val" class="text-cyan-400 font-bold">40%</span>
+                    </div>
+                    <input type="range" id="weight-ai" min="0" max="80" value="40" oninput="updateWeights()" class="w-full accent-cyan-500 bg-navy-950 rounded-lg h-2 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 font-mono">Secular compute & productivity growth</p>
+                </div>
+
+                <!-- Cash / Short T-Bills (Remainder) -->
+                <div class="p-3 bg-navy-850 rounded-xl border border-slate-800 space-y-1">
+                    <div class="flex justify-between items-center text-xs font-mono">
+                        <span class="text-slate-400 flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> Cash / Short T-Bills:
+                        </span>
+                        <span id="weight-cash-val" class="text-slate-200 font-bold">20%</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 font-mono">Unencumbered liquidity for margin calls & dip buying</p>
+                </div>
+
+                <hr class="border-slate-800">
+
+                <!-- Select Scenario -->
+                <div class="space-y-2">
+                    <label class="text-xs font-mono text-slate-300 font-semibold flex items-center gap-2">
+                        <i data-lucide="zap" class="w-3.5 h-3.5 text-gold-400"></i> Select Macro Shock Scenario:
+                    </label>
+                    <select id="scenario-select" onchange="runSimulation()" class="w-full bg-navy-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-gold-500 transition">
+                        <option value="treasury_pivot">1. U.S. Treasury Buyback Intervention (Yield -9bps, Gold +4%, Tech -5%)</option>
+                        <option value="yield_spike">2. 30Y Yield Spike Breach > 5.25% (Broad Multiple Contraction)</option>
+                        <option value="capex_surge">3. Hyperscaler CapEx Upgrade (+70% CapEx to $800B)</option>
+                        <option value="stagflation">4. Resurgent Stagflationary Shock (CPI Spike + Sovereign Volatility)</option>
+                        <option value="flight_to_quality">5. Geopolitical Flight to Safety (Gold Rally + Broader Equity Selloff)</option>
+                    </select>
+                </div>
+
+                <!-- Scenario Parameters Brief -->
+                <div id="scenario-desc" class="p-3 bg-navy-950 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-400 leading-relaxed">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <button onclick="runSimulation()" class="w-full py-3 bg-gradient-to-r from-gold-500 to-amber-600 hover:from-gold-400 hover:to-amber-500 text-navy-950 font-bold text-xs rounded-xl shadow-lg transition font-mono uppercase tracking-wider flex justify-center items-center gap-2">
+                    <i data-lucide="play" class="w-4 h-4"></i> Run Stress Test
+                </button>
+            </div>
+
+            <!-- Visualization & Analytics Area (8 Columns) -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- Performance Trajectory Chart Panel -->
+                <div class="bg-navy-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                        <div>
+                            <h3 class="text-sm font-bold font-mono text-slate-100 uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="trending-up" class="w-4 h-4 text-cyan-400"></i> Return Trajectory Simulation
+                            </h3>
+                            <p class="text-[11px] text-slate-400 font-mono mt-0.5">Projected performance horizon post-event shock</p>
+                        </div>
+                        <span id="scenario-badge" class="text-[10px] font-mono px-3 py-1 bg-gold-500/10 text-gold-400 rounded-full border border-gold-500/20 font-semibold">
+                            Treasury Buyback Intervention
+                        </span>
+                    </div>
+
+                    <!-- Chart Canvas -->
+                    <div class="h-72 relative">
+                        <canvas id="simChart"></canvas>
+                    </div>
+
+                    <!-- Summary Metrics Bar -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 font-mono">
+                        <div class="bg-navy-850 p-3 rounded-xl border border-slate-800">
+                            <div class="text-[10px] text-slate-400">Barbell Net Return</div>
+                            <div id="metric-barbell-ret" class="text-base font-bold text-emerald-400 mt-1">+2.4%</div>
+                        </div>
+                        <div class="bg-navy-850 p-3 rounded-xl border border-slate-800">
+                            <div class="text-[10px] text-slate-400">Trad 60/40 Return</div>
+                            <div id="metric-6040-ret" class="text-base font-bold text-red-400 mt-1">-1.2%</div>
+                        </div>
+                        <div class="bg-navy-850 p-3 rounded-xl border border-slate-800">
+                            <div class="text-[10px] text-slate-400">Alpha Outperformance</div>
+                            <div id="metric-alpha" class="text-base font-bold text-gold-400 mt-1">+3.6%</div>
+                        </div>
+                        <div class="bg-navy-850 p-3 rounded-xl border border-slate-800">
+                            <div class="text-[10px] text-slate-400">Est. Max Drawdown</div>
+                            <div id="metric-drawdown" class="text-base font-bold text-slate-200 mt-1">-2.1%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Factor Attribution & Risk Analysis Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Factor Attribution Breakdown -->
+                    <div class="bg-navy-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+                        <h4 class="text-xs font-bold font-mono text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="w-4 h-4 text-gold-400"></i> Return Attribution Breakdown
+                        </h4>
+
+                        <div class="space-y-3 font-mono text-xs">
+                            <!-- Gold Sleeve Contribution -->
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-[11px]">
+                                    <span class="text-slate-300">Gold Sleeve Contribution:</span>
+                                    <span id="attr-gold-val" class="text-gold-400 font-bold">+1.60%</span>
+                                </div>
+                                <div class="w-full bg-navy-950 h-2 rounded-full overflow-hidden">
+                                    <div id="attr-gold-bar" class="bg-gold-500 h-full transition-all duration-500" style="width: 60%"></div>
+                                </div>
+                            </div>
+
+                            <!-- AI Sleeve Contribution -->
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-[11px]">
+                                    <span class="text-slate-300">AI / Tech Sleeve Contribution:</span>
+                                    <span id="attr-ai-val" class="text-cyan-400 font-bold">-2.00%</span>
+                                </div>
+                                <div class="w-full bg-navy-950 h-2 rounded-full overflow-hidden">
+                                    <div id="attr-ai-bar" class="bg-cyan-500 h-full transition-all duration-500" style="width: 40%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Cash Contribution -->
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-[11px]">
+                                    <span class="text-slate-300">Cash Cushion Carry:</span>
+                                    <span id="attr-cash-val" class="text-slate-300 font-bold">+0.04%</span>
+                                </div>
+                                <div class="w-full bg-navy-950 h-2 rounded-full overflow-hidden">
+                                    <div id="attr-cash-bar" class="bg-slate-400 h-full transition-all duration-500" style="width: 10%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Invalidation & Action Rules -->
+                    <div class="bg-navy-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                        <h4 class="text-xs font-bold font-mono text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="shield-alert" class="w-4 h-4 text-red-400"></i> Tactical Execution Rules
+                        </h4>
+
+                        <div id="tactical-rules" class="space-y-2 text-[11px] font-mono text-slate-300 leading-relaxed">
+                            <div class="p-2.5 bg-navy-850 rounded-lg border border-slate-800 flex items-start gap-2">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-gold-400 shrink-0 mt-0.5"></i>
+                                <span><strong>Rebalancing Trigger:</strong> Rebalance quarterly or whenever any sleeve drifts by &gt; 10% absolute weight.</span>
+                            </div>
+                            <div class="p-2.5 bg-navy-850 rounded-lg border border-slate-800 flex items-start gap-2">
+                                <i data-lucide="corner-down-right" class="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5"></i>
+                                <span><strong>Dip Buying:</strong> Use cash buffer to accumulate high-conviction compute infrastructure during rate-driven contractions.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Footer Notes -->
+        <footer class="pt-6 border-t border-slate-800 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 font-mono gap-2">
+            <div>
+                © 2026 <span class="text-slate-300 font-semibold">Regime & Alpha</span> | Research by Dr. Lora Xiaolin Qian, PhD, CFA
+            </div>
+            <div>
+                Substack: <a href="https://regimeandalpha.substack.com" target="_blank" class="text-gold-400 hover:underline">regimeandalpha.substack.com</a>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- JavaScript Engine -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Scenario Metadata Database
+        const SCENARIOS = {
+            treasury_pivot: {
+                title: "Treasury Buyback Intervention",
+                desc: "U.S. Treasury doubles long-dated buybacks ($4B+). 30Y yields drop ~9bps, Gold surges +4.0%, while AI stocks absorb a -5.0% multiple pullback from prior rate pressure.",
+                goldRet: 0.040,
+                aiRet: -0.050,
+                eq60: -0.020,
+                bond40: 0.005,
+                drawdown: 0.021
+            },
+            yield_spike: {
+                title: "30Y Yield Breach > 5.25%",
+                desc: "Re-accelerating inflation triggers a hawkish rate shock. Duration suffers across the board, compression hits high-beta growth (-7.0%), gold holds relatively flat (-1.0%).",
+                goldRet: -0.010,
+                aiRet: -0.070,
+                eq60: -0.045,
+                bond40: -0.035,
+                drawdown: 0.042
+            },
+            capex_surge: {
+                title: "Hyperscaler CapEx Upgrade",
+                desc: "Cloud giants upgrade CY26 CapEx by +70% ($800B). Compute and energy supply chains surge +9.0%, gold gains +1.0% on persistent sovereign deficit funding.",
+                goldRet: 0.010,
+                aiRet: 0.090,
+                eq60: 0.035,
+                bond40: -0.005,
+                drawdown: 0.012
+            },
+            stagflation: {
+                title: "Resurgent Stagflation Shock",
+                desc: "Oil shocks and sticky CPI trigger stagflation fears. Gold surges +8.0% as ultimate sovereign store of value; tech multiples contract -6.0% under discount rate drag.",
+                goldRet: 0.080,
+                aiRet: -0.060,
+                eq60: -0.035,
+                bond40: -0.040,
+                drawdown: 0.028
+            },
+            flight_to_quality: {
+                title: "Geopolitical Flight to Safety",
+                desc: "Acute geopolitical escalation causes broad deleveraging. Gold rallies +6.0%, tech equities decline -4.5%, cash buffer preserves capital for opportunistic rebalancing.",
+                goldRet: 0.060,
+                aiRet: -0.045,
+                eq60: -0.030,
+                bond40: 0.010,
+                drawdown: 0.018
+            }
+        };
+
+        // Presets Function
+        function applyPreset(preset) {
+            const goldSlider = document.getElementById('weight-gold');
+            const aiSlider = document.getElementById('weight-ai');
+
+            if (preset === 'balanced') {
+                goldSlider.value = 40;
+                aiSlider.value = 40;
+            } else if (preset === 'defensive') {
+                goldSlider.value = 60;
+                aiSlider.value = 20;
+            } else if (preset === 'growth') {
+                goldSlider.value = 25;
+                aiSlider.value = 60;
+            } else if (preset === '6040') {
+                goldSlider.value = 0;
+                aiSlider.value = 60;
+            }
+
+            updateWeights();
+        }
+
+        // Slider Handler
+        function updateWeights() {
+            let gold = parseInt(document.getElementById('weight-gold').value);
+            let ai = parseInt(document.getElementById('weight-ai').value);
+
+            if (gold + ai > 95) {
+                ai = 95 - gold;
+                document.getElementById('weight-ai').value = ai;
+            }
+
+            let cash = 100 - gold - ai;
+
+            document.getElementById('weight-gold-val').innerText = gold + '%';
+            document.getElementById('weight-ai-val').innerText = ai + '%';
+            document.getElementById('weight-cash-val').innerText = cash + '%';
+
+            runSimulation();
+        }
+
+        let chartInstance = null;
+
+        function initChart() {
+            if (chartInstance) return;
+
+            const ctx = document.getElementById('simChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['T-0', 'T+1 Day', 'T+2 Days', 'T+3 Days', 'T+5 Days', 'T+10 Days'],
+                    datasets: [
+                        {
+                            label: 'Custom Barbell Strategy',
+                            data: [0, 0, 0, 0, 0, 0],
+                            borderColor: '#F59E0B',
+                            backgroundColor: 'rgba(245, 158, 11, 0.12)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#F59E0B'
+                        },
+                        {
+                            label: 'Traditional 60/40 Portfolio',
+                            data: [0, 0, 0, 0, 0, 0],
+                            borderColor: '#EF4444',
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.35,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#EF4444'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#94A3B8',
+                                font: { family: 'JetBrains Mono', size: 11 },
+                                boxWidth: 12
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0B0F19',
+                            borderColor: '#1F2C4A',
+                            borderWidth: 1,
+                            titleFont: { family: 'JetBrains Mono', size: 11 },
+                            bodyFont: { family: 'JetBrains Mono', size: 11 },
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + (context.raw >= 0 ? '+' : '') + context.raw.toFixed(2) + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#64748B', font: { family: 'JetBrains Mono', size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { 
+                                color: '#64748B', 
+                                font: { family: 'JetBrains Mono', size: 10 },
+                                callback: function(value) { return (value >= 0 ? '+' : '') + value + '%'; }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function runSimulation() {
+            if (!chartInstance) initChart();
+
+            const goldPct = parseInt(document.getElementById('weight-gold').value);
+            const aiPct = parseInt(document.getElementById('weight-ai').value);
+            const cashPct = 100 - goldPct - aiPct;
+
+            const gold = goldPct / 100;
+            const ai = aiPct / 100;
+            const cash = cashPct / 100;
+
+            const scenarioKey = document.getElementById('scenario-select').value;
+            const scen = SCENARIOS[scenarioKey];
+
+            // Update UI description
+            document.getElementById('scenario-desc').innerText = scen.desc;
+            document.getElementById('scenario-badge').innerText = scen.title;
+
+            // Calculations
+            const attrGold = gold * scen.goldRet;
+            const attrAi = ai * scen.aiRet;
+            const attrCash = cash * 0.002; // Nominal cash yield carry
+
+            const barbellNet = attrGold + attrAi + attrCash;
+            const tradNet = (0.6 * scen.eq60) + (0.4 * scen.bond40);
+            const alphaDelta = barbellNet - tradNet;
+
+            // Chart Series Simulation
+            const barbellSeries = [
+                0,
+                barbellNet * 0.35 * 100,
+                barbellNet * 0.65 * 100,
+                barbellNet * 1.00 * 100,
+                barbellNet * 1.15 * 100,
+                barbellNet * 1.30 * 100
+            ];
+
+            const tradSeries = [
+                0,
+                tradNet * 0.35 * 100,
+                tradNet * 0.65 * 100,
+                tradNet * 1.00 * 100,
+                tradNet * 0.90 * 100,
+                tradNet * 1.05 * 100
+            ];
+
+            chartInstance.data.datasets[0].data = barbellSeries;
+            chartInstance.data.datasets[1].data = tradSeries;
+            chartInstance.update();
+
+            // Render Metrics
+            document.getElementById('metric-barbell-ret').innerText = (barbellNet >= 0 ? '+' : '') + (barbellNet * 100).toFixed(2) + '%';
+            document.getElementById('metric-barbell-ret').className = barbellNet >= 0 ? "text-base font-bold text-emerald-400 mt-1" : "text-base font-bold text-red-400 mt-1";
+
+            document.getElementById('metric-6040-ret').innerText = (tradNet >= 0 ? '+' : '') + (tradNet * 100).toFixed(2) + '%';
+            document.getElementById('metric-6040-ret').className = tradNet >= 0 ? "text-base font-bold text-emerald-400 mt-1" : "text-base font-bold text-red-400 mt-1";
+
+            document.getElementById('metric-alpha').innerText = (alphaDelta >= 0 ? '+' : '') + (alphaDelta * 100).toFixed(2) + '%';
+            document.getElementById('metric-alpha').className = alphaDelta >= 0 ? "text-base font-bold text-gold-400 mt-1" : "text-base font-bold text-slate-400 mt-1";
+
+            document.getElementById('metric-drawdown').innerText = '-' + (scen.drawdown * 100).toFixed(1) + '%';
+
+            // Render Factor Attribution
+            document.getElementById('attr-gold-val').innerText = (attrGold >= 0 ? '+' : '') + (attrGold * 100).toFixed(2) + '%';
+            document.getElementById('attr-ai-val').innerText = (attrAi >= 0 ? '+' : '') + (attrAi * 100).toFixed(2) + '%';
+            document.getElementById('attr-cash-val').innerText = (attrCash >= 0 ? '+' : '') + (attrCash * 100).toFixed(2) + '%';
+
+            // Relative bars width
+            const maxAbs = Math.max(Math.abs(attrGold), Math.abs(attrAi), 0.001);
+            document.getElementById('attr-gold-bar').style.width = Math.min(100, Math.round((Math.abs(attrGold) / maxAbs) * 100)) + '%';
+            document.getElementById('attr-ai-bar').style.width = Math.min(100, Math.round((Math.abs(attrAi) / maxAbs) * 100)) + '%';
+        }
+
+        // Run initial simulation on page load
+        window.onload = function() {
+            initChart();
+            runSimulation();
+        };
+    </script>
+</body>
+</html>
